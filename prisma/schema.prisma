@@ -1,0 +1,85 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL") // À définir dans votre fichier .env (ex: mysql://root:password@localhost:3306/retraite_db)
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+model User {
+  id          Int    @id @default(autoincrement())
+  fullName    String
+  address     String
+  phone       String
+  email       String
+  role        String
+  avatar      String
+}
+
+model Church {
+  id      Int    @id @default(autoincrement())
+  name    String
+  address String
+  phone   String
+  email   String
+}
+
+model Retreat {
+  id        String   @id
+  name      String
+  startDate DateTime
+  endDate   DateTime
+}
+
+model Room {
+  id           String        @id
+  number       String        @unique
+  capacity     Int
+  pavilionId   String
+  gender       String        // "homme", "femme", "mixte"
+  participants Participant[]
+}
+
+model Participant {
+  id                 String   @id
+  registrationNumber String   @unique
+  fullName           String
+  email              String
+  phone              String
+  gender             String   // "homme", "femme"
+  church             String
+  retreatId          String
+  status             String   // "inscrit", "confirme", "arrive", "parti", "annule"
+  avatar             String   @db.Text
+  registeredAt       DateTime @default(now())
+  
+  // Modification ici : le type String devient Json
+  emergencyContact   Json
+  
+  notes              String?  @db.Text
+  source             String   // "public", "admin"
+  feePaid            Boolean  @default(false)
+  feePaidAt          DateTime?
+  checkedInAt        DateTime?
+  checkedOutAt       DateTime?
+  roomId             String?
+  room               Room?    @relation(fields: [roomId], references: [id], onDelete: SetNull)
+}
+
+model Notification {
+  id        String   @id
+  type      String
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model ActivityLog {
+  id          String   @id
+  retreatId   String
+  action      String
+  description String
+  timestamp   DateTime @default(now())
+  userId      String
+}

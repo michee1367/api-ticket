@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  db-mysql:
+    image: mysql:8.0
+    container_name: retraite_mysql_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password_super_securise
+      MYSQL_DATABASE: retraite_db
+      MYSQL_USER: eg_admin
+      MYSQL_PASSWORD: eg_password_2026
+    ports:
+      - "3306:3306"
+    volumes:
+      # On utilise un volume nommé géré par Docker au lieu d'un chemin relatif ./data_db
+      - db_data_local:/var/lib/mysql
+    networks:
+      - retraite_network
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: retraite_phpmyadmin
+    restart: always
+    environment:
+      PMA_HOST: db-mysql
+      UPLOAD_LIMIT: 64M
+    ports:
+      - "8080:80"
+    depends_on:
+      - db-mysql
+    networks:
+      - retraite_network
+
+networks:
+  retraite_network:
+    driver: bridge
+
+# Déclaration du volume nommé
+volumes:
+  db_data_local:
