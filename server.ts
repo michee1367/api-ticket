@@ -7,6 +7,8 @@ import { authenticateToken, AuthenticatedRequest } from './middleware/auth';
 import QRCode from 'qrcode';
 import fs from 'fs';
 import path from 'path';
+import * as roomService from "./room.service"
+import * as participantService from "./participant.service"
 
 const prisma = new PrismaClient();
 const app = express();
@@ -96,7 +98,6 @@ app.post('/api/public/register', async (req, res) => {
         // qrCode: qrCodeDataUrl 
       }
     });
-
     // Création d'une notification système
     await prisma.notification.create({
       data: {
@@ -164,23 +165,52 @@ app.delete('/api/admin/rooms/:id', async (req, res) => {
 // Mettre à jour le statut d'un participant
 app.put('/api/admin/participants/:id/status', async (req, res) => {
   const { status } = req.body;
-  const updated = await prisma.participant.update({ where: { id: req.params.id }, data: { status } });
+  let data = { status }
+  if ( status == "confirme") {
+    const badgeNumber = await participantService.getPartipantBadgetNumber()
+    data = {...data, badgeNumber}
+  }
+  const updated = await prisma.participant.update({ where: { id: req.params.id }, data });
+  
+  console.log(data)
+  try {
+
+    const res = await roomService.assignRoomToParticipant(req.params.id)
+    updated.roomId = res.roomId
+  } catch (error) {
+    
+  }
+
   res.json(updated);
 });
 
 // Assigner une chambre à un participant
 app.put('/api/admin/participants/:id/assign-room', async (req, res) => {
   const { roomId } = req.body;
-  const updated = await prisma.participant.update({ where: { id: req.params.id }, data: { roomId: roomId || null } });
+  const updated =await roomService.assignSpecificRoom(req.params.id, roomId)
+  //const updated = await prisma.participant.update({ where: { id: req.params.id }, data: { roomId: roomId || null } });
   res.json(updated);
 });
 
 // Confirmer paiement d'un participant
 app.put('/api/admin/participants/:id/confirm-fee', async (req, res) => {
-  const updated = await prisma.participant.update({
+  const badgeNumber = await participantService.getPartipantBadgetNumber()
+
+  console.log(badgeNumber)
+
+  let updated = await prisma.participant.update({
     where: { id: req.params.id },
-    data: { feePaid: true, feePaidAt: new Date(), status: "confirme" }
+    data: { feePaid: true, feePaidAt: new Date(), status: "confirme", badgeNumber }
   });
+
+  try {
+    
+    const res = await roomService.assignRoomToParticipant(req.params.id)
+    updated.roomId = res.roomId
+    
+  } catch (error) {
+    
+  }
   res.json(updated);
 });
 

@@ -47,7 +47,8 @@ CREATE TABLE `Room` (
 -- CreateTable
 CREATE TABLE `Participant` (
     `id` VARCHAR(191) NOT NULL,
-    `registrationNumber` VARCHAR(191) NOT NULL,
+    `registrationNumber` VARCHAR(191) NULL,
+    `badgeNumber` VARCHAR(191) NULL,
     `fullName` VARCHAR(191) NOT NULL,
     `email` VARCHAR(191) NOT NULL,
     `phone` VARCHAR(191) NOT NULL,
@@ -67,6 +68,7 @@ CREATE TABLE `Participant` (
     `roomId` VARCHAR(191) NULL,
 
     UNIQUE INDEX `Participant_registrationNumber_key`(`registrationNumber`),
+    UNIQUE INDEX `Participant_badgeNumber_key`(`badgeNumber`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 

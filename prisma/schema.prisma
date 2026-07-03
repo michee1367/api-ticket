@@ -42,7 +42,8 @@ model Room {
 
 model Participant {
   id                 String   @id
-  registrationNumber String   @unique
+  registrationNumber String?   @unique
+  badgeNumber         String?   @unique
   fullName           String
   email              String
   phone              String
