@@ -22,7 +22,7 @@ const prisma = new PrismaClient();
  * @param {string} participantGender - "homme" ou "femme"
  * @returns {Promise<string|null>} L'ID de la chambre disponible, ou null si tout est complet.
  */
-export async function getParticipantBadgeNumber() {
+export async function getPartipantBadgetNumber() {
   // 1. On récupère UNIQUEMENT le dernier participant confirmé qui possède un badge
   const lastParticipant = await prisma.participant.findFirst({
     where: {

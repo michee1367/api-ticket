@@ -15,6 +15,7 @@ const app = express();
 const JWT_SECRET = process.env.JWT_SECRET || 'votre_cle_secrete_jwt_super_robuste';
 // --- CONFIGURATION POUR PLUSIEURS FRONTENDS ---
 const allowedOrigins = [
+  'http://localhost:3000',        // Premier frontend (ex: clients)
   'https://ticket.mink67.com',        // Premier frontend (ex: clients)
   'https://admin.mink67.com'          // Deuxième frontend (ex: admin - remplacez par votre vrai domaine)
 ];
