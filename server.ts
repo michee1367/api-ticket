@@ -191,6 +191,7 @@ app.put('/api/admin/participants/:id/status', async (req, res) => {
   if ( status == "confirme") {
     const badgeNumber = await participantService.getPartipantBadgetNumber()
     data = {...data, badgeNumber}
+    console.log(data)
   }
   const updated = await prisma.participant.update({ where: { id: req.params.id }, data });
   
