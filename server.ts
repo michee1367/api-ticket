@@ -187,25 +187,36 @@ app.delete('/api/admin/rooms/:id', async (req, res) => {
 
 // Mettre à jour le statut d'un participant
 app.put('/api/admin/participants/:id/status', async (req, res) => {
-  const { status } = req.body;
-  let data = { status }
-  if ( status == "confirme") {
-    const badgeNumber = await participantService.getPartipantBadgetNumber()
-    data = {...data, badgeNumber}
-    console.log(data)
-  }
-  const updated = await prisma.participant.update({ where: { id: req.params.id }, data });
   
-  console.log(data)
-  try {
 
-    const res = await roomService.assignRoomToParticipant(req.params.id)
-    updated.roomId = res.roomId
-  } catch (error) {
+  let isOkey = false
+  while (!isOkey) {
+    try {
+      const { status } = req.body;
+      let data = { status }
+      if ( status == "confirme") {
+        const badgeNumber = await participantService.getPartipantBadgetNumber()
+        data = {...data, badgeNumber}
+        console.log(data)
+      }
+      
+      const updated = await prisma.participant.update({ where: { id: req.params.id }, data });
+      isOkey = true
+      console.log(data)
+      try {
+
+        const res = await roomService.assignRoomToParticipant(req.params.id)
+        updated.roomId = res.roomId
+      } catch (error) {
+        
+      }
+
+      res.json(updated);
+    } catch (error) {
+      console.error(error)
+    }
     
   }
-
-  res.json(updated);
 });
 
 // Assigner une chambre à un participant
@@ -218,24 +229,49 @@ app.put('/api/admin/participants/:id/assign-room', async (req, res) => {
 
 // Confirmer paiement d'un participant
 app.put('/api/admin/participants/:id/confirm-fee', async (req, res) => {
-  const badgeNumber = await participantService.getPartipantBadgetNumber()
-
-  console.log(badgeNumber)
-
-  let updated = await prisma.participant.update({
-    where: { id: req.params.id },
-    data: { feePaid: true, feePaidAt: new Date(), status: "confirme", badgeNumber }
-  });
-
   try {
-    
-    const res = await roomService.assignRoomToParticipant(req.params.id)
-    updated.roomId = res.roomId
+    const participantId = req.params.id;
+
+    // 1. Récupérer le participant actuel pour vérifier son badge
+    const currentParticipant = await prisma.participant.findUnique({
+      where: { id: participantId },
+      select: { badgeNumber: true } // On ne récupère que le badge pour les performances
+    });
+
+    if (!currentParticipant) {
+      return res.status(404).json({ message: "Participant introuvable" });
+    } 
+
+    let badgeNumber = currentParticipant.badgeNumber;
+
+    // 2. Si le participant n'a PAS ENCORE de badge, on lui en génère un
+    if (!badgeNumber) {
+      badgeNumber = await participantService.getPartipantBadgetNumber();
+      console.log(`Nouveau badge généré : ${badgeNumber}`);
+    } else {
+      console.log(`Le participant possède déjà le badge : ${badgeNumber}`);
+    }
+
+    console.log(badgeNumber)
+
+    let updated = await prisma.participant.update({
+      where: { id: req.params.id },
+      data: { feePaid: true, feePaidAt: new Date(), status: "confirme", badgeNumber }
+    });
+
+    try {
+      
+      const res = await roomService.assignRoomToParticipant(req.params.id)
+      updated.roomId = res.roomId
+      
+    } catch (error) {
+      
+    }
+    res.json(updated);
     
   } catch (error) {
     
   }
-  res.json(updated);
 });
 
 // Enregistrement des arrivées / départs (CheckIn / CheckOut)
