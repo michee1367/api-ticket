@@ -13,8 +13,30 @@ import * as participantService from "./participant.service"
 const prisma = new PrismaClient();
 const app = express();
 const JWT_SECRET = process.env.JWT_SECRET || 'votre_cle_secrete_jwt_super_robuste';
+// --- CONFIGURATION POUR PLUSIEURS FRONTENDS ---
+const allowedOrigins = [
+  'https://ticket.mink67.com',        // Premier frontend (ex: clients)
+  'https://admin.mink67.com'          // Deuxième frontend (ex: admin - remplacez par votre vrai domaine)
+];
 
-app.use(cors());
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Permet aux requêtes sans origine (comme Postman ou les requêtes serveur à serveur) de passer
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Bloqué par la politique CORS (Origine non autorisée)'));
+    }
+  },
+  credentials: true, // Requis si vous envoyez des tokens JWT ou des cookies
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
+// ----------------------------------------------
+//app.use(cors());
 app.use(express.json());
 
 const FRONT_HOST=process.env.FRONT_HOST || "https://votre-site.com"
